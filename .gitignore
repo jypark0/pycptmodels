@@ -6,9 +6,17 @@ __pycache__/
 # Environments
 venv/
 
+# Distribution / packaging
+dist/
+.eggs/
+*.egg-info/
+
 # IDE settings
 .vscode/
 .idea/
+
+# Pytest
+.pytest_cache/
 
 # MacOS
 # General

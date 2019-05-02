@@ -61,7 +61,7 @@ class PoissonProcessInput:
   def _sample_lotclass(self):
     ''' Generate random lot classes
     '''
-    self.lotclass = np.random.randint(1, self.K + 1, size=self.N).tolist()
+    self.lotclass = np.random.randint(0, self.K, size=self.N).tolist()
 
   def initialize(self):
     self._sample_arrivals()
