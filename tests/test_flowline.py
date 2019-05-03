@@ -1,11 +1,11 @@
 import numpy as np
 
-from pycptmodels.flowline import ParametricFlowline
 from pycptmodels.input import PoissonProcessInput
+from pycptmodels.fl import ParametricFlowLine
 
 
 def test_initialize():
-    FL = ParametricFlowline(
+    FL = ParametricFlowLine(
       flow=[
         [1, 1, 1, 1, 1, 2, 2, 3, 4, 3, 3, 3, 3, 2, 2, 1],
         [1, 1, 1, 1, 1, 1, 2, 2, 4, 3, 3, 3, 3, 2, 2, 1],
@@ -42,15 +42,15 @@ def test_initialize():
     
 def test_run():
     ## Prescan test
-    input = PoissonProcessInput(N=5, lambda_=0, lotsizes=[5], lotsize_weights=[
+    input1 = PoissonProcessInput(N=5, lambda_=0, lotsizes=[5], lotsize_weights=[
                                 1], reticle=[250, 250], prescan=[400, 400], K=3)
-    input.initialize()
+    input1.initialize()
 
     # Fix arrival times and lot classes
-    input.lotclass = [1, 1, 0, 2, 0]
-    input.A = [0, 500, 1500, 2500, 2600]
+    input1.lotclass = [1, 1, 0, 2, 0]
+    input1.A = [0, 500, 1500, 2500, 2600]
 
-    FL = ParametricFlowline(
+    FL = ParametricFlowLine(
       flow=[
         [1, 1, 1, 1, 1, 2, 2, 3, 4, 3, 3, 3, 3, 2, 2, 1],
         [1, 1, 1, 1, 1, 1, 2, 2, 4, 3, 3, 3, 3, 2, 2, 1],
@@ -68,7 +68,7 @@ def test_run():
       pick=1
     )    
     FL.initialize()
-    FL.run(input)
+    FL.run(input1)
 
     # Check shape of FL.X
     assert np.array(FL.X).shape == (25, 26)
@@ -82,15 +82,15 @@ def test_run():
     assert np.array_equal(FL.C, [2323., 3123., 3923., 5213., 6418.])
 
     ## No Prescan test
-    input = PoissonProcessInput(N=5, lambda_=0, lotsizes=[5], lotsize_weights=[
+    input2 = PoissonProcessInput(N=5, lambda_=0, lotsizes=[5], lotsize_weights=[
                                 1], reticle=[250, 250], prescan=[0, 0], K=3)
-    input.initialize()
+    input2.initialize()
 
     # Fix arrival times and lot classes
-    input.lotclass = [1, 1, 0, 2, 0]
-    input.A = [0, 100, 150, 500, 600]
+    input2.lotclass = [1, 1, 0, 2, 0]
+    input2.A = [0, 100, 150, 500, 600]
 
-    FL = ParametricFlowline(
+    FL = ParametricFlowLine(
       flow=[
         [1, 1, 1, 1, 1, 2, 2, 3, 4, 3, 3, 3, 3, 2, 2, 1],
         [1, 1, 1, 1, 1, 1, 2, 2, 4, 3, 3, 3, 3, 2, 2, 1],
