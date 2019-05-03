@@ -39,9 +39,10 @@ def test_initialize():
     assert np.array_equal(FL.BN, [15, 15, 15])
     assert np.array_equal(FL.PBN, [10, 12, 5])
     assert np.array_equal(FL.dummy, [4, 4, 0])
-    
+
+
 def test_run():
-    ## Prescan test
+    # Prescan test
     input1 = PoissonProcessInput(N=5, lambda_=0, lotsizes=[5], lotsize_weights=[
                                 1], reticle=[250, 250], prescan=[400, 400], K=3)
     input1.initialize()

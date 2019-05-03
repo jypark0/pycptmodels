@@ -49,6 +49,9 @@ class PoissonProcessInput:
         """
         self.W = random.choices(self.lotsizes, self.lotsize_weights, k=self.N)
 
+        # Calculate first wafer index (omega(l, 1)) for all lots
+        self.first_wfr_idx = np.subtract(np.cumsum(self.W), self.W)
+
     def _sample_reticle(self):
         """ Generate reticle alignment setup times from uniform distribution
         """
