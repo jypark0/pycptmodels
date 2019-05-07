@@ -4,12 +4,11 @@ from pycptmodels.input import PoissonProcessInput
 from pycptmodels.fl import ParametricFlowLine
 
 
-class ToolERM:
+class WaferERM:
     def __init__(self):
+        self.phi = []
         self.phi1 = []
         self.phi2 = []
-        self.L_eq = []
-        self.L_neq = []
 
         self.A1 = []
         self.B1 = []
@@ -30,8 +29,10 @@ class ToolERM:
         self.LRT = []
         self.TT = []
 
-    # TODO: Create unit test
-    def train(self, input_sample, X, L_l, S_l, C_l, C_w, BN, R, move, pick):
+    # TODO: create unit test
+    def train(self, input_sample, L_l, S_l, C_l, S_w, C_w, R):
+        self.phi = np.zeros(input_sample.N, dtype=int).tolist()
+
         self.A1 = np.zeros(input_sample.K).tolist()
         A1_sum = np.zeros(input_sample.K).tolist()
         A1_count = np.zeros(input_sample.K, dtype=int).tolist()
@@ -42,16 +43,14 @@ class ToolERM:
         self.A2 = np.zeros(input_sample.K).tolist()
         A2_sum = np.zeros(input_sample.K).tolist()
         A2_count = np.zeros(input_sample.K, dtype=int).tolist()
-        self.B2 = np.zeros((input_sample.K, input_sample.K)).tolist()
-        B2_sum = np.zeros((input_sample.K, input_sample.K)).tolist()
-        B2_count = np.zeros((input_sample.K, input_sample.K), dtype=int).tolist()
+        self.B2 = np.zeros(input_sample.K).tolist()
+        B2_sum = np.zeros(input_sample.K).tolist()
+        B2_count = np.zeros(input_sample.K, dtype=int).tolist()
 
         self.Dm = np.zeros(input_sample.K).tolist()
         Dm_sum = np.zeros(input_sample.K).tolist()
         Dm_count = np.zeros(input_sample.K, dtype=int).tolist()
         self.Dp = np.zeros(input_sample.K).tolist()
-        Dp_sum = np.zeros(input_sample.K).tolist()
-        Dp_count = np.zeros(input_sample.K, dtype=int).tolist()
 
         self.E = np.zeros((input_sample.K, input_sample.K)).tolist()
         E_sum = np.zeros((input_sample.K, input_sample.K)).tolist()
@@ -59,16 +58,12 @@ class ToolERM:
 
         # Discard first and last lots
         for lot in range(1, input_sample.N - 1):
-
             curr_k = input_sample.lotclass[lot]
-            prev_k = input_sample.lotclass[lot - 1]
-            next_k = input_sample.lotclass[lot + 1]
-
-            lhs = X[input_sample.first_wfr_idx[lot]][BN[curr_k]]
-            rhs = X[input_sample.first_wfr_idx[lot] - 1][BN[curr_k] + 1] + move + 2 * pick
+            prev_k = input_sample.lotclass[lot-1]
 
             # No bottleneck contention
-            if lhs > rhs:
+            if S_l[lot] > C_l[lot-1]:
+                self.phi[lot] = 1
                 self.phi1.append(lot)
 
                 A1_sum[curr_k] += (C_l[lot] - C_w[input_sample.first_wfr_idx[lot]])
@@ -78,42 +73,50 @@ class ToolERM:
                 B1_count[curr_k][prev_k] += 1
 
             # Bottleneck contention
-            else:
+            if curr_k == prev_k and input_sample.A[lot] <= S_w[input_sample.first_wfr_idx[lot] - 1]:
+                self.phi[lot] = 2
                 self.phi2.append(lot)
 
                 A2_sum[curr_k] += (C_l[lot] - C_w[input_sample.first_wfr_idx[lot]])
                 A2_count[curr_k] += (input_sample.W[lot] - 1)
 
-                B2_sum[curr_k][prev_k] += (C_w[input_sample.first_wfr_idx[lot]] - C_l[lot-1])
-                B2_count[curr_k][prev_k] += 1
+                B2_sum[curr_k] += (C_w[input_sample.first_wfr_idx[lot]] - C_l[lot-1])
+                B2_count[curr_k] += 1
 
-            # Calculate vacation time related parameters
-            if curr_k == next_k:
-                self.L_eq.append(lot)
-                Dm_sum[curr_k] += (C_l[lot] - X[input_sample.first_wfr_idx[lot] - R[curr_k][0]][2])
-                Dm_count[curr_k] += 1
-            else:
-                self.L_neq.append(lot)
-                Dp_sum[curr_k] += (C_l[lot] - X[input_sample.first_wfr_idx[lot] - 1][2])
-                Dp_count[curr_k] += 1
-
-            # Calculate setup related parameter
+            # E
             E_sum[curr_k][prev_k] += (S_l[lot] - L_l[lot])
             E_count[curr_k][prev_k] += 1
+
+        # Check if last lot phi1 or phi2
+        if S_l[-1] > C_l[-2]:
+            self.phi[lot] = 1
+            self.phi1.append(input_sample.N - 1)
+        if input_sample.lotclass[-1] == input_sample.lotclass[-2] and input_sample.A[-1] <= S_w[input_sample.first_wfr_idx[-1] - 1]:
+            self.phi[lot] = 2
+            self.phi2.append(input_sample.N - 1)
+
+        # Calculate vacation time related parameters
+        for lot in range(1, input_sample.N - 1):
+            curr_k = input_sample.lotclass[lot]
+
+            if self.phi[lot + 1] == 2:
+                Dm_sum[curr_k] += (C_l[lot] - L_l[lot + 1])
+                Dm_count[curr_k] += 1
 
         # Average all parameters
         for k1 in range(input_sample.K):
             self.A1[k1] = A1_sum[k1] / A1_count[k1] if A1_count[k1] else 0.
             self.A2[k1] = A2_sum[k1] / A2_count[k1] if A2_count[k1] else 0.
             self.Dm[k1] = Dm_sum[k1] / Dm_count[k1] if Dm_count[k1] else 0.
-            self.Dp[k1] = Dp_sum[k1] / Dp_count[k1] if Dp_count[k1] else 0.
+            self.Dp[k1] = self.Dm[k1] - (R[k1][0] - 1) * self.A2[k1]
+            self.B2[k1] = B2_sum[k1] / B2_count[k1] if B2_count[k1] else 0.
 
             for k2 in range(input_sample.K):
                 self.B1[k1][k2] = B1_sum[k1][k2] / B1_count[k1][k2] if B1_count[k1][k2] else 0.
-                self.B2[k1][k2] = B2_sum[k1][k2] / B2_count[k1][k2] if B2_count[k1][k2] else 0.
                 self.E[k1][k2] = E_sum[k1][k2] / E_count[k1][k2] if E_count[k1][k2] else 0.
 
-    # TODO: Create unit test
+
+    # TODO: Check if correct
     def run(self, input_sample):
         self.Vm = np.zeros(input_sample.N).tolist()
         self.Vp = np.zeros(input_sample.N).tolist()
@@ -154,8 +157,8 @@ class ToolERM:
             self.TT[lot] = min(self.C[lot] - self.C[lot - 1], self.LRT[lot]) if lot != 0 else self.LRT[lot]
 
 
-input1 = PoissonProcessInput(N=5000, lambda_=3500, lotsizes=[25], lotsize_weights=[
-                            1], reticle=[250, 250], prescan=[0, 0], K=3)
+input1 = PoissonProcessInput(N=1000, lambda_=3300, lotsizes=[25], lotsize_weights=[
+                            1], reticle=[250, 250], prescan=[400, 400], K=3)
 input1.initialize()
 
 FL = ParametricFlowLine(
@@ -178,7 +181,6 @@ FL = ParametricFlowLine(
 FL.initialize()
 FL.run(input1)
 
-erm3 = ToolERM()
-erm3.train(input1, FL.X, FL.L, FL.S, FL.C, FL.C_w, FL.BN, FL.R, FL.move, FL.pick)
-erm3.run(input1)
+erm = WaferERM()
+erm.train(input1, FL.L, FL.S, FL.C, FL.S_w, FL.C_w, FL.R)
 print("here")

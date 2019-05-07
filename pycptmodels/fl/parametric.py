@@ -31,7 +31,7 @@ class ParametricFlowLine:
         :param PT: Process times for process flow
         :type PT: list of list
 
-        :param buffer_R: Buffer sizes, starting from left to right. Length of list must be equal to max cluster index - 1.
+        :param buffer_R: Buffer sizes, starting from left to right. Length of list must be equal to max cluster index-1.
         :type buffer_R: list of int
 
         :param move: Robot move time
@@ -66,7 +66,6 @@ class ParametricFlowLine:
         self.CT = []
         self.LRT = []
         self.TT = []
-
 
     def initialize(self):
         """ Create new process flows including buffers for parametric flow line. Modify process times
@@ -168,16 +167,18 @@ class ParametricFlowLine:
 
         wfr = maxR
         # For lot l
-        for l in range(input_sample.N):
-            curr_k = input_sample.lotclass[l]
-            if l == 0:
+        for lot in range(input_sample.N):
+            curr_k = input_sample.lotclass[lot]
+            if lot == 0:
                 # Ensure that first lot undergoes prescan setup
-                prev_k = (input_sample.lotclass[0] + 1) % self.K
+                prev_k = (input_sample.lotclass[lot] + 1) % self.K
             else:
-                prev_k = input_sample.lotclass[l - 1]
+                prev_k = input_sample.lotclass[lot - 1]
 
             # For wafer w in lot l
-            for w in range(input_sample.W[l]):
+            for w in range(input_sample.W[lot]):
+                if w != 0:
+                    prev_k = curr_k
                 # For each module
                 for m in range(len(self.flow[0])):
                     # Calculate R'(w, m)
@@ -188,20 +189,21 @@ class ParametricFlowLine:
                     # Calculate P(w) and tau_s
                     if prescan and curr_k != prev_k:
                         P = self.last_prescan[prev_k]
-                        tau_s = input_sample.tau_S[l]
+                        tau_s = input_sample.tau_S[lot]
                     else:
                         P = 0
                         tau_s = 0
                     # Calculate tau_r
                     if w == 0 and m == self.BN[curr_k] + 1:
-                        tau_r = input_sample.tau_R[l]
+                        tau_r = input_sample.tau_R[lot]
                     else:
                         tau_r = 0
 
                     # EEEs
                     # First module
                     if m == 0:
-                        self.X[wfr][m] = max(input_sample.A[l], self.X[wfr - R_prime][P + 1], self.X[wfr - 1][1]) + tau_s
+                        self.X[wfr][m] = max(input_sample.A[lot], self.X[wfr - R_prime][P + 1],
+                                             self.X[wfr - 1][1]) + tau_s
                     # Last module
                     elif m == len(self.flow[0]) - 1:
                         self.X[wfr][m] = max(self.X[wfr][m - 1] + self.PT[curr_k][m - 1],
@@ -215,20 +217,19 @@ class ParametricFlowLine:
                 wfr = wfr + 1
 
             # Calculate lot loading times
-            if l == 0:
-                self.L[l] = 0.
+            if lot == 0:
+                self.L[lot] = 0.
             else:
                 if curr_k == prev_k:
-                    self.L[l] = self.X[wfr - input_sample.W[l] - self.R[prev_k][1]][self.dummy[prev_k] + 1]
+                    self.L[lot] = self.X[wfr - input_sample.W[lot] - self.R[prev_k][0]][self.dummy[prev_k] + 1]
                 else:
-                    self.L[l] = self.X[wfr - input_sample.W[l] - 1][self.dummy[prev_k] + 1]
-            self.S[l] = self.X[wfr - input_sample.W[l]][self.dummy[curr_k]]
-            self.C[l] = self.X[wfr - 1][-1] + self.PT[curr_k][-1]
+                    self.L[lot] = self.X[wfr - input_sample.W[lot] - 1][self.dummy[prev_k] + 1]
+            self.S[lot] = self.X[wfr - input_sample.W[lot]][self.dummy[curr_k]]
+            self.C[lot] = self.X[wfr - 1][-1] + self.PT[curr_k][-1]
 
-            self.CT[l] = self.S[l] - input_sample.A[l]
-            self.LRT[l] = self.C[l] - self.S[l]
-            self.TT[l] = min(self.C[l] - self.C[l - 1], self.LRT[l]) if l != 0 else self.LRT[l]
+            self.CT[lot] = self.S[lot] - input_sample.A[lot]
+            self.LRT[lot] = self.C[lot] - self.S[lot]
+            self.TT[lot] = min(self.C[lot] - self.C[lot - 1], self.LRT[lot]) if lot != 0 else self.LRT[lot]
 
         # Delete unneeded X
         del self.X[0:maxR]
-

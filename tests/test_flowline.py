@@ -109,7 +109,7 @@ def test_run():
       pick=1
     )    
     FL.initialize()
-    FL.run(input)
+    FL.run(input2)
 
     # Check shape of FL.X
     assert np.array(FL.X).shape == (25, 26)
