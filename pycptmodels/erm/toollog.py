@@ -35,9 +35,9 @@ class ToolERM:
         self.A1 = np.zeros(input_sample.K).tolist()
         A1_sum = np.zeros(input_sample.K).tolist()
         A1_count = np.zeros(input_sample.K, dtype=int).tolist()
-        self.B1 = np.zeros((input_sample.K, input_sample.K)).tolist()
-        B1_sum = np.zeros((input_sample.K, input_sample.K)).tolist()
-        B1_count = np.zeros((input_sample.K, input_sample.K), dtype=int).tolist()
+        self.B1 = np.zeros(input_sample.K).tolist()
+        B1_sum = np.zeros(input_sample.K).tolist()
+        B1_count = np.zeros(input_sample.K, dtype=int).tolist()
 
         self.A2 = np.zeros(input_sample.K).tolist()
         A2_sum = np.zeros(input_sample.K).tolist()
@@ -74,8 +74,8 @@ class ToolERM:
                 A1_sum[curr_k] += (C_l[lot] - C_w[input_sample.first_wfr_idx[lot]])
                 A1_count[curr_k] += (input_sample.W[lot] - 1)
 
-                B1_sum[curr_k][prev_k] += (C_w[input_sample.first_wfr_idx[lot]] - S_l[lot])
-                B1_count[curr_k][prev_k] += 1
+                B1_sum[curr_k] += (C_w[input_sample.first_wfr_idx[lot]] - S_l[lot])
+                B1_count[curr_k] += 1
 
             # Bottleneck contention
             else:
@@ -90,11 +90,11 @@ class ToolERM:
             # Calculate vacation time related parameters
             if curr_k == next_k:
                 self.L_eq.append(lot)
-                Dm_sum[curr_k] += (C_l[lot] - X[input_sample.first_wfr_idx[lot] - R[curr_k][0]][2])
+                Dm_sum[curr_k] += (C_l[lot] - X[input_sample.first_wfr_idx[lot] + input_sample.W[lot] - R[curr_k][0]][1])
                 Dm_count[curr_k] += 1
             else:
                 self.L_neq.append(lot)
-                Dp_sum[curr_k] += (C_l[lot] - X[input_sample.first_wfr_idx[lot] - 1][2])
+                Dp_sum[curr_k] += (C_l[lot] - X[input_sample.first_wfr_idx[lot] + input_sample.W[lot] - 1][1])
                 Dp_count[curr_k] += 1
 
             # Calculate setup related parameter
@@ -107,9 +107,9 @@ class ToolERM:
             self.A2[k1] = A2_sum[k1] / A2_count[k1] if A2_count[k1] else 0.
             self.Dm[k1] = Dm_sum[k1] / Dm_count[k1] if Dm_count[k1] else 0.
             self.Dp[k1] = Dp_sum[k1] / Dp_count[k1] if Dp_count[k1] else 0.
+            self.B1[k1] = B1_sum[k1] / B1_count[k1] if B1_count[k1] else 0.
 
             for k2 in range(input_sample.K):
-                self.B1[k1][k2] = B1_sum[k1][k2] / B1_count[k1][k2] if B1_count[k1][k2] else 0.
                 self.B2[k1][k2] = B2_sum[k1][k2] / B2_count[k1][k2] if B2_count[k1][k2] else 0.
                 self.E[k1][k2] = E_sum[k1][k2] / E_count[k1][k2] if E_count[k1][k2] else 0.
 
@@ -144,7 +144,7 @@ class ToolERM:
                 self.L[lot] = max(input_sample.A[lot], self.V[lot-1])
                 self.S[lot] = self.L[lot] + self.E[curr_k][prev_k]
 
-            self.C[lot] = max(self.S[lot] + self.B1[curr_k][prev_k] + self.A1[curr_k]*(input_sample.W[lot] - 1),
+            self.C[lot] = max(self.S[lot] + self.B1[curr_k] + self.A1[curr_k]*(input_sample.W[lot] - 1),
                               self.C[lot-1] + self.B2[curr_k][prev_k] + self.A2[curr_k]*(input_sample.W[lot] - 1))
             self.Vm[lot] = self.C[lot] - self.Dm[curr_k]
             self.Vp[lot] = self.C[lot] - self.Dp[curr_k]
@@ -153,32 +153,3 @@ class ToolERM:
             self.LRT[lot] = self.C[lot] - self.S[lot]
             self.TT[lot] = min(self.C[lot] - self.C[lot - 1], self.LRT[lot]) if lot != 0 else self.LRT[lot]
 
-
-input1 = PoissonProcessInput(N=5000, lambda_=3500, lotsizes=[25], lotsize_weights=[
-                            1], reticle=[250, 250], prescan=[0, 0], K=3)
-input1.initialize()
-
-FL = ParametricFlowLine(
-  flow=[
-    [1, 1, 1, 1, 1, 2, 2, 3, 4, 3, 3, 3, 3, 2, 2, 1],
-    [1, 1, 1, 1, 1, 1, 2, 2, 4, 3, 3, 3, 3, 2, 2, 1],
-    [1, 1, 1, 1, 2, 2, 2, 1, 2, 3, 4, 3, 3, 3, 3, 2, 2, 1], ],
-  R=[
-    [1, 2, 2, 2, 2, 1, 2, 2, 1, 2, 2, 2, 3, 2, 2, 1],
-    [1, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 3, 2, 2, 1],
-    [1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 3, 2, 2, 1], ],
-  PT=[
-    [0, 80, 90, 60, 65, 50, 90, 60, 100, 90, 60, 90, 130, 90, 60, 0],
-    [0, 80, 90, 60, 65, 90, 60, 50, 100, 90, 60, 90, 130, 90, 60, 0],
-    [0, 80, 90, 60, 50, 90, 60, 65, 90, 60, 100, 90, 60, 90, 130, 90, 60, 0], ],
-  buffer_R=[1, 1, 16],
-  move=3,
-  pick=1
-)
-FL.initialize()
-FL.run(input1)
-
-erm3 = ToolERM()
-erm3.train(input1, FL.X, FL.L, FL.S, FL.C, FL.C_w, FL.BN, FL.R, FL.move, FL.pick)
-erm3.run(input1)
-print("here")

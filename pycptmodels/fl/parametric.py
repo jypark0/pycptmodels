@@ -1,23 +1,9 @@
 import numpy as np
+import csv
 
 
 class ParametricFlowLine:
-    def __init__(self,
-                 flow=[
-                     [1, 1, 1, 1, 1, 2, 2, 3, 4, 3, 3, 3, 3, 2, 2, 1],
-                     [1, 1, 1, 1, 1, 1, 2, 2, 4, 3, 3, 3, 3, 2, 2, 1],
-                     [1, 1, 1, 1, 2, 2, 2, 1, 2, 3, 4, 3, 3, 3, 3, 2, 2, 1], ],
-                 R=[
-                     [1, 2, 2, 2, 2, 1, 2, 2, 1, 2, 2, 2, 3, 2, 2, 1],
-                     [1, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 3, 2, 2, 1],
-                     [1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 3, 2, 2, 1], ],
-                 PT=[
-                     [0, 80, 90, 60, 65, 50, 90, 60, 100, 90, 60, 90, 130, 90, 60, 0],
-                     [0, 80, 90, 60, 65, 90, 60, 50, 100, 90, 60, 90, 130, 90, 60, 0],
-                     [0, 80, 90, 60, 50, 90, 60, 65, 90, 60, 100, 90, 60, 90, 130, 90, 60, 0], ],
-                 buffer_R=[1, 1, 16],
-                 move=3,
-                 pick=1):
+    def __init__(self, flow=None, R=None, PT=None, move=None, buffer_R=None, pick=None):
         """ Create parametric flow line model of CPT
 
         :param flow: Process flows. Must be a list for each lot class, where each list contains cluster indices
@@ -40,6 +26,30 @@ class ParametricFlowLine:
         :param pick: Robot pick time
         :type pick: int
         """
+
+        # Set mutable default arguments
+        if flow is None:
+            flow = [
+                [1, 1, 1, 1, 1, 2, 2, 3, 4, 3, 3, 3, 3, 2, 2, 1],
+                [1, 1, 1, 1, 1, 1, 2, 2, 4, 3, 3, 3, 3, 2, 2, 1],
+                [1, 1, 1, 1, 2, 2, 2, 1, 2, 3, 4, 3, 3, 3, 3, 2, 2, 1], ]
+        if R is None:
+            R = [
+                [1, 2, 2, 2, 2, 1, 2, 2, 1, 2, 2, 2, 3, 2, 2, 1],
+                [1, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 3, 2, 2, 1],
+                [1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 3, 2, 2, 1], ]
+        if PT is None:
+            PT = [
+                [0, 80, 90, 60, 65, 50, 90, 60, 100, 90, 60, 90, 130, 90, 60, 0],
+                [0, 80, 90, 60, 65, 90, 60, 50, 100, 90, 60, 90, 130, 90, 60, 0],
+                [0, 80, 90, 60, 50, 90, 60, 65, 90, 60, 100, 90, 60, 90, 130, 90, 60, 0], ]
+        if move is None:
+            move = 3
+        if buffer_R is None:
+            buffer_R = [1, 1, 16],
+        if pick is None:
+            pick = 1
+
         # K = Number of lot classes
         self.K = len(flow)
 
@@ -233,3 +243,17 @@ class ParametricFlowLine:
 
         # Delete unneeded X
         del self.X[0:maxR]
+
+    def csv_write_lot(self, filename):
+        with open(filename, 'w', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            for l, s, c, in zip(self.L, self.S, self.C):
+                writer.writerow((l, s, c))
+
+    def csv_write_wfr(self, filename):
+        with open(filename, 'w', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            for s, c, x, in zip(self.S_w, self.C_w, self.X):
+                writer.writerow((s, c, *x))
+
+

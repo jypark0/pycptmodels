@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 # Environments
+.venv/
 venv/
 
 # Distribution / packaging

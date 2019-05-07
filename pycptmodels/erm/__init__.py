@@ -1,2 +1,2 @@
-import pycptmodels.input
-import pycptmodels.fl
+from .toollog import ToolERM
+from .waferlog import WaferERM

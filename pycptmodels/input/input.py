@@ -1,5 +1,7 @@
 import numpy as np
 import random
+import csv
+import math
 
 
 class PoissonProcessInput:
@@ -42,7 +44,9 @@ class PoissonProcessInput:
         X_t = np.random.exponential(self.lambda_, self.N - 1)
         arrivals = np.cumsum(X_t)
         arrivals = np.insert(arrivals, 0, 0.)
-        self.A = arrivals.tolist()
+        # self.A = arrivals.tolist()
+        self.A = [int(round(x, -2)) for x in arrivals.tolist()]
+
 
     def _sample_lotsizes(self):
         """ Generate lot sizes according to probabilities
@@ -73,3 +77,9 @@ class PoissonProcessInput:
         self._sample_lotclass()
         self._sample_reticle()
         self._sample_prescan()
+
+    def write_csv(self, filename):
+        with open(filename, 'w', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            for a, w, c, r, s in zip(self.A, self.W, self.lotclass, self.tau_R, self.tau_S):
+                writer.writerow((a, w, c, r, s))
