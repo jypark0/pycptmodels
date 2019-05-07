@@ -1,7 +1,7 @@
 import numpy as np
 
-from pycptmodels.input import PoissonProcessInput
 from pycptmodels.fl import ParametricFlowLine
+from pycptmodels.input import PoissonProcessInput
 
 
 def test_initialize():

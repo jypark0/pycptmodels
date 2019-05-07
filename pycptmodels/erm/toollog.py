@@ -1,8 +1,5 @@
 import numpy as np
 
-from pycptmodels.input import PoissonProcessInput
-from pycptmodels.fl import ParametricFlowLine
-
 
 class ToolERM:
     def __init__(self):

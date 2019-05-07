@@ -1,7 +1,7 @@
-import numpy as np
-import random
 import csv
-import math
+import random
+
+import numpy as np
 
 
 class PoissonProcessInput:
