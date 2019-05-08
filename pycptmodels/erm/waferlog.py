@@ -5,7 +5,6 @@ class WaferERM:
     def __init__(self):
         self.phi1 = []
         self.phi2 = []
-        print
 
         self.A1 = []
         self.B1 = []
@@ -85,11 +84,11 @@ class WaferERM:
 
         # Check if last lot phi1 or phi2
         if S_l[-1] > C_l[-2]:
-            phi[lot] = 1
+            phi[-1] = 1
             self.phi1.append(input_sample.N - 1)
         elif input_sample.lotclass[-1] == input_sample.lotclass[-2] and \
                 input_sample.A[-1] <= S_w[input_sample.first_wfr_idx[-1] - 1]:
-            phi[lot] = 2
+            phi[-1] = 2
             self.phi2.append(input_sample.N - 1)
 
         # Calculate vacation time related parameters

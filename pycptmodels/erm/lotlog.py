@@ -1,9 +1,8 @@
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 from pycptmodels.fl import ParametricFlowLine
 from pycptmodels.input import PoissonProcessInput
-
-from sklearn.linear_model import LinearRegression
 
 
 class LotERM:
@@ -102,10 +101,10 @@ class LotERM:
 
         # Check if last lot phi1 or phi2
         if S_l[-1] > C_l[-2]:
-            phi[lot] = 1
+            phi[-1] = 1
             self.phi1.append(input_sample.N - 1)
         elif input_sample.lotclass[-1] == input_sample.lotclass[-2] and input_sample.A[-1] <= S_l[-2]:
-            phi[lot] = 2
+            phi[-1] = 2
             self.phi2.append(input_sample.N - 1)
 
         # Calculate vacation time related parameters
@@ -189,7 +188,6 @@ input1.lotclass = [0, 2, 0, 0, 2, 0, 1, 2, 0, 1, 1, 0, 2, 1, 1, 1, 2, 0, 2, 1, 1
                    0, 1, 1, 2, 1, 0, 1, 2, 1, 2, 0, 2, 1, 1, 1, 1, 1, 0, 1, 1, 2, 0, 1, 0, 1, 1, 0, 2, 2, 0, 1, 1, 0, 0,
                    1, 2, 1, 1, 0, 1, 0, 2, 2, 0, 1, 1, 1, 0, 0, 0, 2, 2, 0, 1, 1, 2, 1, 2, 0, 2, 2, 1, 2, 1, 2, 2, 2, 1,
                    0, 1, 1, 1, 2, 1, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 2, 1, 0, 2, 0, 1, 1, 2, 1, 1, 2, 2, 1, 2]
-
 
 # input1.csv_write('input.csv')
 
