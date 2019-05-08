@@ -78,7 +78,7 @@ class PoissonProcessInput:
         self._sample_reticle()
         self._sample_prescan()
 
-    def write_csv(self, filename):
+    def csv_write(self, filename):
         with open(filename, 'w', encoding='utf-8') as f:
             writer = csv.writer(f)
             for a, w, c, r, s in zip(self.A, self.W, self.lotclass, self.tau_R, self.tau_S):
