@@ -141,7 +141,7 @@ class ToolERM:
                 self.S[lot] = self.L[lot] + self.E[curr_k][prev_k]
                 self.C[lot] = max(self.S[lot] + self.B1[curr_k] + self.A1[curr_k] * (input_sample.W[lot] - 1),
                                   self.C[lot - 1] + self.B2[curr_k][prev_k] + self.A2[curr_k] * (
-                                              input_sample.W[lot] - 1))
+                                          input_sample.W[lot] - 1))
 
             self.Vm[lot] = self.C[lot] - self.Dm[curr_k]
             self.Vp[lot] = self.C[lot] - self.Dp[curr_k]
