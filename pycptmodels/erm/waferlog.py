@@ -152,7 +152,7 @@ class WaferERM:
             self.Vm[lot] = self.C[lot] - self.Dm[curr_k]
             self.Vp[lot] = self.C[lot] - self.Dp[curr_k]
 
-            self.CT[lot] = self.S[lot] - input_sample.A[lot]
+            self.CT[lot] = self.C[lot] - input_sample.A[lot]
             self.LRT[lot] = self.C[lot] - self.S[lot]
             self.TT[lot] = min(self.C[lot] - self.C[lot - 1], self.LRT[lot]) if lot != 0 else self.LRT[lot]
 

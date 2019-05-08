@@ -27,7 +27,6 @@ class ToolERM:
         self.LRT = []
         self.TT = []
 
-    # TODO: Create unit test
     def train(self, input_sample, X, L_l, S_l, C_l, C_w, BN, R, move, pick):
         self.A1 = np.zeros(input_sample.K).tolist()
         A1_sum = np.zeros(input_sample.K).tolist()
@@ -81,13 +80,14 @@ class ToolERM:
                 A2_sum[curr_k] += (C_l[lot] - C_w[input_sample.first_wfr_idx[lot]])
                 A2_count[curr_k] += (input_sample.W[lot] - 1)
 
-                B2_sum[curr_k][prev_k] += (C_w[input_sample.first_wfr_idx[lot]] - C_l[lot-1])
+                B2_sum[curr_k][prev_k] += (C_w[input_sample.first_wfr_idx[lot]] - C_l[lot - 1])
                 B2_count[curr_k][prev_k] += 1
 
             # Calculate vacation time related parameters
             if curr_k == next_k:
                 self.L_eq.append(lot)
-                Dm_sum[curr_k] += (C_l[lot] - X[input_sample.first_wfr_idx[lot] + input_sample.W[lot] - R[curr_k][0]][1])
+                Dm_sum[curr_k] += (
+                        C_l[lot] - X[input_sample.first_wfr_idx[lot] + input_sample.W[lot] - R[curr_k][0]][1])
                 Dm_count[curr_k] += 1
             else:
                 self.L_neq.append(lot)
@@ -110,7 +110,6 @@ class ToolERM:
                 self.B2[k1][k2] = B2_sum[k1][k2] / B2_count[k1][k2] if B2_count[k1][k2] else 0.
                 self.E[k1][k2] = E_sum[k1][k2] / E_count[k1][k2] if E_count[k1][k2] else 0.
 
-    # TODO: Create unit test
     def run(self, input_sample):
         self.Vm = np.zeros(input_sample.N).tolist()
         self.Vp = np.zeros(input_sample.N).tolist()
@@ -129,24 +128,23 @@ class ToolERM:
 
             # Lot loading times
             if lot == 0:
-                prev_k = (curr_k+1) % input_sample.K
                 self.L[lot] = input_sample.A[lot]
                 self.S[lot] = self.L[lot]
+                self.C[lot] = self.S[lot] + self.B1[curr_k] + self.A1[curr_k] * (input_sample.W[lot] - 1)
             else:
-                prev_k = input_sample.lotclass[lot-1]
+                prev_k = input_sample.lotclass[lot - 1]
                 if curr_k == prev_k:
-                    self.V[lot-1] = self.Vm[lot-1]
+                    self.V[lot - 1] = self.Vm[lot - 1]
                 else:
-                    self.V[lot-1] = self.Vp[lot-1]
-                self.L[lot] = max(input_sample.A[lot], self.V[lot-1])
+                    self.V[lot - 1] = self.Vp[lot - 1]
+                self.L[lot] = max(input_sample.A[lot], self.V[lot - 1])
                 self.S[lot] = self.L[lot] + self.E[curr_k][prev_k]
-
-            self.C[lot] = max(self.S[lot] + self.B1[curr_k] + self.A1[curr_k]*(input_sample.W[lot] - 1),
-                              self.C[lot-1] + self.B2[curr_k][prev_k] + self.A2[curr_k]*(input_sample.W[lot] - 1))
+                self.C[lot] = max(self.S[lot] + self.B1[curr_k] + self.A1[curr_k] * (input_sample.W[lot] - 1),
+                                  self.C[lot - 1] + self.B2[curr_k][prev_k] + self.A2[curr_k] * (
+                                          input_sample.W[lot] - 1))
             self.Vm[lot] = self.C[lot] - self.Dm[curr_k]
             self.Vp[lot] = self.C[lot] - self.Dp[curr_k]
 
-            self.CT[lot] = self.S[lot] - input_sample.A[lot]
+            self.CT[lot] = self.C[lot] - input_sample.A[lot]
             self.LRT[lot] = self.C[lot] - self.S[lot]
             self.TT[lot] = min(self.C[lot] - self.C[lot - 1], self.LRT[lot]) if lot != 0 else self.LRT[lot]
-

@@ -228,17 +228,18 @@ class ParametricFlowLine:
                 wfr = wfr + 1
 
             # Calculate lot loading times
+            prev_k = input_sample.lotclass[lot - 1]
             if lot == 0:
                 self.L[lot] = 0.
             else:
                 if curr_k == prev_k:
-                    self.L[lot] = self.X[wfr - input_sample.W[lot] - self.R[prev_k][0]][self.dummy[prev_k] + 1]
+                    self.L[lot] = self.X[wfr - input_sample.W[lot] - self.R[prev_k][0]][1]
                 else:
-                    self.L[lot] = self.X[wfr - input_sample.W[lot] - 1][self.dummy[prev_k] + 1]
+                    self.L[lot] = self.X[wfr - input_sample.W[lot] - 1][1]
             self.S[lot] = self.X[wfr - input_sample.W[lot]][self.dummy[curr_k]]
             self.C[lot] = self.X[wfr - 1][-1] + self.PT[curr_k][-1]
 
-            self.CT[lot] = self.S[lot] - input_sample.A[lot]
+            self.CT[lot] = self.C[lot] - input_sample.A[lot]
             self.LRT[lot] = self.C[lot] - self.S[lot]
             self.TT[lot] = min(self.C[lot] - self.C[lot - 1], self.LRT[lot]) if lot != 0 else self.LRT[lot]
 
@@ -256,5 +257,3 @@ class ParametricFlowLine:
             writer = csv.writer(f)
             for s, c, x, in zip(self.S_w, self.C_w, self.X):
                 writer.writerow((s, c, *x))
-
-
