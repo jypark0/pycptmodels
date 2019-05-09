@@ -44,8 +44,8 @@ class PoissonProcessInput:
         X_t = np.random.exponential(self.lambda_, self.N - 1)
         arrivals = np.cumsum(X_t)
         arrivals = np.insert(arrivals, 0, 0.)
-        # self.A = arrivals.tolist()
-        self.A = [int(round(x, -2)) for x in arrivals.tolist()]
+        self.A = arrivals.tolist()
+        # self.A = [int(round(x, -2)) for x in arrivals.tolist()]
 
     def _sample_lotsizes(self):
         """ Generate lot sizes according to probabilities

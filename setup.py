@@ -13,7 +13,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/jypark0/pycptmodels",
     packages=setuptools.find_packages(),
-    install_requires=["numpy"],
+    install_requires=["numpy", "scikit-learn"],
     setup_requires=["pytest-runner"],
     tests_requires=["pytest"]
 )
