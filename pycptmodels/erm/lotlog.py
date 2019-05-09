@@ -1,8 +1,7 @@
+import csv
+
 import numpy as np
 from sklearn.linear_model import LinearRegression
-
-from pycptmodels.fl import ParametricFlowLine
-from pycptmodels.input import PoissonProcessInput
 
 
 class LotERM:
@@ -29,7 +28,6 @@ class LotERM:
         self.LRT = []
         self.TT = []
 
-    # TODO: check if correct
     def train(self, input_sample, L_l, S_l, C_l, R):
         phi = np.zeros(input_sample.N, dtype=int).tolist()
 
@@ -81,8 +79,8 @@ class LotERM:
             E_count[curr_k][prev_k] += 1
 
         # Calculate A1, B1, A2, B2 with weighted least squares regression
-        mean_TT1 = np.divide(TT1_sum, TT1_count, out=np.zeros_like(TT1_sum), where=TT1_count!=0)
-        mean_TT2 = np.divide(TT2_sum, TT2_count, out=np.zeros_like(TT2_sum), where=TT2_count!=0)
+        mean_TT1 = np.divide(TT1_sum, TT1_count, out=np.zeros_like(TT1_sum), where=TT1_count != 0)
+        mean_TT2 = np.divide(TT2_sum, TT2_count, out=np.zeros_like(TT2_sum), where=TT2_count != 0)
         X = np.array(input_sample.lotsizes).reshape((-1, 1))
         for k in range(input_sample.K):
             reg1 = LinearRegression()
@@ -123,7 +121,6 @@ class LotERM:
             for k2 in range(input_sample.K):
                 self.E[k1][k2] = E_sum[k1][k2] / E_count[k1][k2] if E_count[k1][k2] else 0.
 
-    # TODO: check if correct
     def run(self, input_sample):
         self.Vm = np.zeros(input_sample.N).tolist()
         self.Vp = np.zeros(input_sample.N).tolist()
@@ -162,3 +159,19 @@ class LotERM:
             self.CT[lot] = self.C[lot] - input_sample.A[lot]
             self.LRT[lot] = self.C[lot] - self.S[lot]
             self.TT[lot] = min(self.C[lot] - self.C[lot - 1], self.LRT[lot]) if lot != 0 else self.LRT[lot]
+
+    def csv_write_params(self, filename):
+        with open(filename, 'w', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(('Lot class', 'A1', 'B1', 'A2', 'B2', 'Dm', 'Dp', 'E'))
+            for k, a1, b1, a2, b2, dm, dp, e, in zip(range(len(self.A1)), self.A1, self.B1, self.A2, self.B2, self.Dm,
+                                                     self.Dp, self.E):
+                writer.writerow((k, a1, b1, a2, b2, dm, dp, e))
+
+    def csv_write_run(self, filename):
+        with open(filename, 'w', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(('Lot', 'V', 'L', 'S', 'C', 'Vm', 'Vp', 'CT', 'LRT', 'TT'))
+            for lot, v, l, s, c, vm, vp, ct, lrt, tt in zip(range(len(self.S)), self.V, self.L, self.S, self.C, self.Vm,
+                                                            self.Vp, self.CT, self.LRT, self.TT):
+                writer.writerow((lot, v, l, s, c, vm, vp, ct, lrt, tt))

@@ -44,8 +44,8 @@ class PoissonProcessInput:
         X_t = np.random.exponential(self.lambda_, self.N - 1)
         arrivals = np.cumsum(X_t)
         arrivals = np.insert(arrivals, 0, 0.)
-        self.A = arrivals.tolist()
-        # self.A = [int(round(x, -2)) for x in arrivals.tolist()]
+        # self.A = arrivals.tolist()
+        self.A = [int(round(x, -2)) for x in arrivals.tolist()]
 
     def _sample_lotsizes(self):
         """ Generate lot sizes according to probabilities
@@ -80,5 +80,6 @@ class PoissonProcessInput:
     def csv_write(self, filename):
         with open(filename, 'w', encoding='utf-8') as f:
             writer = csv.writer(f)
+            writer.writerow(('A', 'W', 'Lot class', 'Reticle', 'Prescan'))
             for a, w, c, r, s in zip(self.A, self.W, self.lotclass, self.tau_R, self.tau_S):
                 writer.writerow((a, w, c, r, s))

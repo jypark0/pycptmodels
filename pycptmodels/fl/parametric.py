@@ -47,7 +47,7 @@ class ParametricFlowLine:
         if move is None:
             move = 3
         if buffer_R is None:
-            buffer_R = [1, 1, 16],
+            buffer_R = [1, 1, 16]
         if pick is None:
             pick = 1
 
@@ -249,11 +249,13 @@ class ParametricFlowLine:
     def csv_write_lot(self, filename):
         with open(filename, 'w', encoding='utf-8') as f:
             writer = csv.writer(f)
-            for l, s, c, in zip(self.L, self.S, self.C):
+            writer.writerow(('Lot', 'L_l', 'S_l', 'C_l'))
+            for lot, l, s, c, in zip(range(len(self.S)), self.L, self.S, self.C):
                 writer.writerow((l, s, c))
 
     def csv_write_wfr(self, filename):
         with open(filename, 'w', encoding='utf-8') as f:
             writer = csv.writer(f)
-            for s, c, x, in zip(self.S_w, self.C_w, self.X):
+            writer.writerow(('Wafer', 'S_w', 'C_w', *['X_{}'.format(i) for i in range(len(self.flow[0]))]))
+            for w, s, c, x, in zip(range(len(self.S_w)), self.S_w, self.C_w, self.X):
                 writer.writerow((s, c, *x))

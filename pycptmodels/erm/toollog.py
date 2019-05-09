@@ -1,3 +1,5 @@
+import csv
+
 import numpy as np
 
 
@@ -149,3 +151,19 @@ class ToolERM:
             self.CT[lot] = self.C[lot] - input_sample.A[lot]
             self.LRT[lot] = self.C[lot] - self.S[lot]
             self.TT[lot] = min(self.C[lot] - self.C[lot - 1], self.LRT[lot]) if lot != 0 else self.LRT[lot]
+
+    def csv_write_params(self, filename):
+        with open(filename, 'w', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(('Lot class', 'A1', 'B1', 'A2', 'B2', 'Dm', 'Dp', 'E'))
+            for k, a1, b1, a2, b2, dm, dp, e, in zip(range(len(self.A1)), self.A1, self.B1, self.A2, self.B2, self.Dm,
+                                                     self.Dp, self.E):
+                writer.writerow((k, a1, b1, a2, b2, dm, dp, e))
+
+    def csv_write_run(self, filename):
+        with open(filename, 'w', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(('Lot', 'V', 'L', 'S', 'C', 'Vm', 'Vp', 'CT', 'LRT', 'TT'))
+            for lot, v, l, s, c, vm, vp, ct, lrt, tt in zip(range(len(self.S)), self.V, self.L, self.S, self.C, self.Vm,
+                                                            self.Vp, self.CT, self.LRT, self.TT):
+                writer.writerow((lot, v, l, s, c, vm, vp, ct, lrt, tt))
