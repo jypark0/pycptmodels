@@ -6,6 +6,8 @@ from sklearn.linear_model import LinearRegression
 
 class LotERM:
     def __init__(self):
+        """Create lot-level log exit recursion model (ERM). Instance variables are initially empty lists.
+        """
         self.phi1 = []
         self.phi2 = []
 
@@ -29,6 +31,28 @@ class LotERM:
         self.TT = []
 
     def train(self, input_sample, L_l, S_l, C_l, R):
+        """Train using an Input object and other data obtained from another model. The input must contain several
+        distinct lot sizes and N must be sufficiently large to discern bottleneck contention from no bottleneck
+        contention cases.
+        Calculates parameters A1, B1, A2, B2, Dm, Dp, and E.
+
+        :param input_sample: input to train the model on.
+        :type input_sample: pycptmodels.input.Input
+
+        :param L_l: Lot load times
+        :type L_l: list of float
+
+        :param S_l: Lot start times
+        :type S_l: list of float
+
+        :param C_l: Lot completion times
+        :type C_l: list of float
+
+        :param R: Redundancies of process flow. Must be a list for each lot class
+        :type R: list of int
+
+        :return: None
+        """
         phi = np.zeros(input_sample.N, dtype=int).tolist()
 
         # No bottleneck contention
@@ -61,7 +85,6 @@ class LotERM:
             # No bottleneck contention
             if S_l[lot] > C_l[lot - 1]:
                 phi[lot] = 1
-                self.phi1.append(lot)
 
                 TT1_sum[curr_k][lotsize_idx] += (C_l[lot] - S_l[lot])
                 TT1_count[curr_k, lotsize_idx] += 1
@@ -69,7 +92,6 @@ class LotERM:
             # Bottleneck contention
             elif curr_k == prev_k and input_sample.A[lot] <= S_l[lot - 1]:
                 phi[lot] = 2
-                self.phi2.append(lot)
 
                 TT2_sum[curr_k][lotsize_idx] += (C_l[lot] - C_l[lot - 1])
                 TT2_count[curr_k, lotsize_idx] += 1
@@ -100,10 +122,8 @@ class LotERM:
         # Check if last lot phi1 or phi2
         if S_l[-1] > C_l[-2]:
             phi[-1] = 1
-            self.phi1.append(input_sample.N - 1)
         elif input_sample.lotclass[-1] == input_sample.lotclass[-2] and input_sample.A[-1] <= S_l[-2]:
             phi[-1] = 2
-            self.phi2.append(input_sample.N - 1)
 
         # Calculate vacation time related parameters
         for lot in range(1, input_sample.N - 1):
@@ -112,6 +132,10 @@ class LotERM:
             if phi[lot + 1] == 2:
                 Dm_sum[curr_k] += (C_l[lot] - L_l[lot + 1])
                 Dm_count[curr_k] += 1
+
+        # Store phi1, phi2 for reference
+        self.phi1 = np.where(phi == 1).tolist()
+        self.phi2 = np.where(phi == 2).tolist()
 
         # Average parameters
         for k1 in range(input_sample.K):
@@ -122,6 +146,14 @@ class LotERM:
                 self.E[k1][k2] = E_sum[k1][k2] / E_count[k1][k2] if E_count[k1][k2] else 0.
 
     def run(self, input_sample):
+        """Estimate lot vacation, load, start, and completion times of an Input sample. Model must be trained before
+        use. Also calculates cycle time, lot residency time, and throughput time of lots.
+
+        :param input_sample: input to simulate the model on.
+        :type input_sample: pycptmodels.input.Input
+
+        :return: None
+        """
         self.Vm = np.zeros(input_sample.N).tolist()
         self.Vp = np.zeros(input_sample.N).tolist()
         self.V = np.zeros(input_sample.N).tolist()
@@ -161,6 +193,13 @@ class LotERM:
             self.TT[lot] = min(self.C[lot] - self.C[lot - 1], self.LRT[lot]) if lot != 0 else self.LRT[lot]
 
     def csv_write_params(self, filename):
+        """Write trained parameters to csv file. Train model first. Generally used for debugging code.
+
+        :param filename: filename of csv file
+        :type filename: str
+
+        :return: None
+        """
         with open(filename, 'w', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(('Lot class', 'A1', 'B1', 'A2', 'B2', 'Dm', 'Dp', 'E'))
@@ -169,6 +208,13 @@ class LotERM:
                 writer.writerow((k, a1, b1, a2, b2, dm, dp, e))
 
     def csv_write_run(self, filename):
+        """Write estimated values to csv file. Train and run model first. Generally used for debugging code.
+
+        :param filename: filename of csv file
+        :type filename: str
+
+        :return: None
+        """
         with open(filename, 'w', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(('Lot', 'V', 'L', 'S', 'C', 'Vm', 'Vp', 'CT', 'LRT', 'TT'))

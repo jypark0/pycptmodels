@@ -6,24 +6,24 @@ import numpy as np
 
 class PoissonProcessInput:
     def __init__(self, N, lambda_, lotsizes, lotsize_weights, reticle, prescan, K):
-        """ Create Input object
+        """Create Input object
 
         :param N: Number of lots
         :type N: int
 
-        :param lambda_: Parameter for Poisson process arrival times of lots
+        :param lambda_: Parameter for Poisson process arrival times of lots. Use 0 for just-in-time arrivals.
         :type lambda: float
 
-        :param lotsizes: Lot sizes
+        :param lotsizes: Lot sizes (number of wafers per lot)
         :type lotsizes: list of int
 
         :param lotsize_weights: Probabilities of lot sizes corresponding to `lotsizes`
         :type lotsize_weights: list of float
 
-        :param reticle: Parameters for reticle alignment setup distribution
+        :param reticle: Parameters for reticle alignment setup distribution. Use [0, 0] for no setups.
         :type reticle: list of float
 
-        :param prescan: Parameters for prescan setup distribution
+        :param prescan: Parameters for prescan setup distribution. Use [0, 0] for no setups.
         :type prescan: list of float
 
         :param K: Number of lot classes
@@ -39,7 +39,9 @@ class PoissonProcessInput:
         self.K = K
 
     def _sample_arrivals(self):
-        """ Poisson Process lot arrival times
+        """Generate random sample of lot arrival times
+
+        :return: None
         """
         X_t = np.random.exponential(self.lambda_, self.N - 1)
         arrivals = np.cumsum(X_t)
@@ -48,7 +50,9 @@ class PoissonProcessInput:
         # self.A = [int(round(x, -2)) for x in arrivals.tolist()]
 
     def _sample_lotsizes(self):
-        """ Generate lot sizes according to probabilities
+        """Generate random sample of lot sizes according to lot size probabilities
+
+        :return: None
         """
         self.W = random.choices(self.lotsizes, self.lotsize_weights, k=self.N)
 
@@ -56,21 +60,33 @@ class PoissonProcessInput:
         self.first_wfr_idx = np.subtract(np.cumsum(self.W), self.W)
 
     def _sample_reticle(self):
-        """ Generate reticle alignment setup times from uniform distribution
+        """Generate reticle alignment setup times from uniform distribution
+
+        :return: None
         """
         self.tau_R = np.random.uniform(*self.reticle_params, size=self.N).tolist()
 
     def _sample_prescan(self):
-        """ Generate prescan setup times from uniform distribution
+        """Generate prescan setup times from uniform distribution
+
+        :return: None
         """
         self.tau_S = np.random.uniform(*self.prescan_params, size=self.N).tolist()
 
     def _sample_lotclass(self):
-        """ Generate random lot classes
+        """Generate random lot classes
+
+        :return: None
         """
         self.lotclass = np.random.randint(0, self.K, size=self.N).tolist()
 
     def initialize(self):
+        """Generate random sample of lots according to given parameters.
+        (Arrival times, lot sizes, lot classes, reticle setup times, prescan setup times)
+
+        :return: None
+        """
+
         self._sample_arrivals()
         self._sample_lotsizes()
         self._sample_lotclass()
@@ -78,6 +94,14 @@ class PoissonProcessInput:
         self._sample_prescan()
 
     def csv_write(self, filename):
+        """Write Input to csv file
+        (Arrival times, lot sizes, lot classes, reticle setup times, prescan setup times)
+
+        :param filename: filename of csv file
+        :type filename: str
+
+        :return: None
+        """
         with open(filename, 'w', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(('A', 'W', 'Lot class', 'Reticle', 'Prescan'))

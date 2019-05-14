@@ -5,20 +5,19 @@ import numpy as np
 
 class ParametricFlowLine:
     def __init__(self, flow=None, R=None, PT=None, move=None, buffer_R=None, pick=None):
-        """ Create parametric flow line model of CPT
+        """Create parametric flow line model.
 
-        :param flow: Process flows. Must be a list for each lot class, where each list contains cluster indices
-        Positive integer for each cluster with a robot arm, starting from left to right.
-        1 for indexer
-        :type flow: list of list
+        :param flow: Process flows. Must be a list for each lot class, where each list contains cluster indices.
+        Starting from the left, assign increasing positive integer for each cluster with a robot arm. Use 1 for indexer.
+        :type flow: list of list of int
 
         :param R: Redundancies of process flow. Must be a list for each lot class
-        :type R: list of list
+        :type R: list of list of int
 
         :param PT: Process times for process flow
-        :type PT: list of list
+        :type PT: list of list of float
 
-        :param buffer_R: Buffer sizes, starting from left to right. Length of list must be equal to max cluster index-1.
+        :param buffer_R: Buffer sizes, starting from left to right. Length of list must be equal to max_cluster_index-1.
         :type buffer_R: list of int
 
         :param move: Robot move time
@@ -79,7 +78,8 @@ class ParametricFlowLine:
         self.TT = []
 
     def initialize(self):
-        """ Create new process flows including buffers for parametric flow line. Modify process times
+        """Apply flowline model to CPT. Create new process flows including the buffers as zero process time modules.
+        Modify the process times
         """
 
         # Add buffers to flow, R, and PT
@@ -152,6 +152,15 @@ class ParametricFlowLine:
             self.last_prescan[k] = m
 
     def run(self, input_sample):
+        """Estimate lot start and completion times of an Input sample with the ParametricFlowLine, using recursive
+        elementary evolution equations (EEEs). Model must be initialized before use.
+        Also calculates cycle time, lot residency time, and throughput time of lots.
+
+        :param input_sample: input to simulate the model on.
+        :type input_sample: pycptmodels.input.Input
+
+        :return: None
+        """
         maxR = np.max(self.R)
         self.X = np.zeros((maxR + np.sum(input_sample.W), len(self.flow[0])))
         self.X[0:maxR, :] = float("-inf")
@@ -247,6 +256,14 @@ class ParametricFlowLine:
         del self.X[0:maxR]
 
     def csv_write_lot(self, filename):
+        """Write lot-level estimated values to csv file. Initialize and run model first. Generally used for
+        debugging code.
+
+        :param filename: filename of csv file
+        :type filename: str
+
+        :return: None
+        """
         with open(filename, 'w', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(('Lot', 'L_l', 'S_l', 'C_l'))
@@ -254,6 +271,14 @@ class ParametricFlowLine:
                 writer.writerow((l, s, c))
 
     def csv_write_wfr(self, filename):
+        """Write wafer-level estimated values to csv file. Initialize and run model first. Generally used for
+        debugging code.
+
+        :param filename: filename of csv file
+        :type filename: str
+
+        :return: None
+        """
         with open(filename, 'w', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(('Wafer', 'S_w', 'C_w', *['X_{}'.format(i) for i in range(len(self.flow[0]))]))

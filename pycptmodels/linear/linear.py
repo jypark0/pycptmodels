@@ -5,6 +5,8 @@ import numpy as np
 
 class LinearModel:
     def __init__(self):
+        """Create linear model. Instance variables are initially empty lists.
+        """
         self.A = []
 
         self.S = []
@@ -15,6 +17,17 @@ class LinearModel:
         self.TT = []
 
     def train(self, input_sample, C_l):
+        """Train using an Input object and lot completion times obtained from another model.
+        Calculates parameter A.
+
+        :param input_sample: input to train the model on.
+        :type input_sample: pycptmodels.input.Input
+
+        :param C_l: Lot completion times
+        :type C_l: list of float
+
+        :return: None
+        """
         self.A = np.zeros(input_sample.K).tolist()
         A_sum = np.zeros(input_sample.K).tolist()
         A_count = np.zeros(input_sample.K, dtype=int).tolist()
@@ -31,6 +44,14 @@ class LinearModel:
             self.A[k1] = A_sum[k1] / A_count[k1] if A_count[k1] else 0.
 
     def run(self, input_sample):
+        """Estimate lot start and completion times of an Input sample. Model must be trained before use.
+        Also calculates cycle time, lot residency time, and throughput time of lots.
+
+        :param input_sample: input to simulate the model on.
+        :type input_sample: pycptmodels.input.Input
+
+        :return: None
+        """
         self.S = np.zeros(input_sample.N).tolist()
         self.C = np.zeros(input_sample.N).tolist()
 
@@ -54,6 +75,13 @@ class LinearModel:
             self.TT[lot] = min(self.C[lot] - self.C[lot - 1], self.LRT[lot]) if lot != 0 else self.LRT[lot]
 
     def csv_write_params(self, filename):
+        """Write trained parameters to csv file. Train model first. Generally used for debugging code.
+
+        :param filename: filename of csv file
+        :type filename: str
+
+        :return: None
+        """
         with open(filename, 'w', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(('Lot class', 'A'))
@@ -61,6 +89,13 @@ class LinearModel:
                 writer.writerow((k, a))
 
     def csv_write_run(self, filename):
+        """Write estimated values to csv file. Train and run model first. Generally used for debugging code.
+
+        :param filename: filename of csv file
+        :type filename: str
+
+        :return: None
+        """
         with open(filename, 'w', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(('Lot', 'S', 'C', 'CT', 'LRT', 'TT'))
