@@ -144,10 +144,10 @@ class ToolERM:
             E_count[curr_k][prev_k] += 1
 
         # Store phi1, phi2, L_eq, L_neq for reference
-        self.phi1 = np.where(phi == 1).tolist()
-        self.phi2 = np.where(phi == 2).tolist()
-        self.L_eq = np.where(L_idx == 1).tolist()
-        self.L_neq = np.where(L_idx == 2).tolist()
+        self.phi1 = np.where(phi == 1)[0].tolist()
+        self.phi2 = np.where(phi == 2)[0].tolist()
+        self.L_eq = np.where(L_idx == 1)[0].tolist()
+        self.L_neq = np.where(L_idx == 2)[0].tolist()
 
         # Average all parameters
         for k1 in range(input_sample.K):

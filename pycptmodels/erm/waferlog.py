@@ -57,7 +57,7 @@ class WaferERM:
 
         :return: None
         """
-        phi = np.zeros(input_sample.N, dtype=int).tolist()
+        phi = np.zeros(input_sample.N, dtype=int)
 
         self.A1 = np.zeros(input_sample.K).tolist()
         A1_sum = np.zeros(input_sample.K).tolist()
@@ -127,8 +127,8 @@ class WaferERM:
                 Dm_count[curr_k] += 1
 
         # Store phi1, phi2 for reference
-        self.phi1 = np.where(phi == 1).tolist()
-        self.phi2 = np.where(phi == 2).tolist()
+        self.phi1 = np.where(phi == 1)[0].tolist()
+        self.phi2 = np.where(phi == 2)[0].tolist()
 
         # Average all parameters
         for k1 in range(input_sample.K):
