@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pycptmodels",
-    version="0.0.1",
+    version="0.1.0",
     author="Jung Yeon Park",
     author_email="jpark0@gmail.com",
     description="Equipment models for clustered photolithography tools",
