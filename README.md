@@ -17,12 +17,13 @@ pip install -U <package_dir>
 
 ## Usage
 - Import package.
-- Generate lot arrivals with desired parameters:
+- Create Input object with desired parameters and generate random sample:
 
 ```
 input1 = PoissonProcessInput(N=20, lambda_=1000, lotsizes=[3, 4, 5, 6, 7],
                                  lotsize_weights=[0.05, 0.2, 0.5, 0.2, 0.05], reticle=[210, 260], prescan=[240, 420],
                                  K=3)
+input1.initialize()
 ```
 
 - Construct a flowline model for the desired CPT configuration. This model will be assumed to be exact. By default, it will use the CPT configuration outlined
